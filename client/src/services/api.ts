@@ -32,3 +32,21 @@ export const reviewApi = {
     return response.data;
   },
 };
+
+export const favoriteApi = {
+  getFavorites: async (userId: string): Promise<Location[]> => {
+    const response = await api.get<Location[]>('/favorites', { params: { userId } });
+    return response.data;
+  },
+  add: async (userId: string, locationId: string): Promise<any> => {
+    const response = await api.post('/favorites', { userId, locationId });
+    return response.data;
+  },
+  remove: async (userId: string, locationId: string): Promise<void> => {
+    await api.delete('/favorites', { data: { userId, locationId } });
+  },
+  check: async (userId: string, locationId: string): Promise<boolean> => {
+    const response = await api.get<{ isFavorited: boolean }>('/favorites/check', { params: { userId, locationId } });
+    return response.data.isFavorited;
+  },
+};

@@ -10,6 +10,10 @@ export const translations = {
       addLocation: '新增地點',
       cancel: '取消',
       filterStroller: '嬰兒車友善',
+      favorites: '我的收藏',
+      addToFavorites: '加入收藏',
+      removeFromFavorites: '移除收藏',
+      noFavorites: '目前沒有收藏',
     },
     locationForm: {
       nameZh: '中文名稱',
@@ -59,6 +63,10 @@ export const translations = {
       addLocation: 'Add Location',
       cancel: 'Cancel',
       filterStroller: 'Stroller Friendly',
+      favorites: 'Favorites',
+      addToFavorites: 'Add to Favorites',
+      removeFromFavorites: 'Remove from Favorites',
+      noFavorites: 'No favorites yet',
     },
     locationForm: {
       nameZh: 'Name (Chinese)',

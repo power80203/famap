@@ -1,5 +1,6 @@
 import type { Location } from '../types/location.js';
 import type { Review } from '../types/review.js';
+import type { Favorite } from '../types/favorite.js';
 
 export let mockLocations: Location[] = [
   {
@@ -73,3 +74,5 @@ export const mockReviews: Review[] = [
     createdAt: '2026-03-10T09:15:00Z',
   },
 ];
+
+export let mockFavorites: Favorite[] = [];

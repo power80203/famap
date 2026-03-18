@@ -610,3 +610,101 @@ body {
   color: var(--primary);
   font-weight: bold;
 }
+
+/* Favorites and Sidebar Tabs */
+.sidebar-tabs {
+  display: flex;
+  background-color: var(--primary);
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.2s;
+  font-family: var(--sans);
+}
+
+.tab-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-button.active {
+  background: var(--bg-white);
+  color: var(--primary);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.favorite-icon-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #ccc;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-icon-button:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+.favorite-icon-button.active {
+  color: var(--accent);
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.favorite-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+}
+
+.favorite-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.favorite-button.active {
+  color: var(--accent);
+  background: white;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+}

@@ -57,4 +57,11 @@ export interface LocationCreateDTO {
   facilities: string[];
 }
 
+export interface Favorite {
+  id: string;
+  userId: string;
+  locationId: string;
+  createdAt: string;
+}
+
 export type Language = 'zh' | 'en';

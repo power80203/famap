@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapPin, Navigation, Globe, Trees as Park, Baby, Utensils, Hospital, X, Plus, Filter } from 'lucide-react';
-import { locationApi, reviewApi } from './services/api';
+import { MapPin, Navigation, Globe, Trees as Park, Baby, Utensils, Hospital, X, Plus, Filter, Heart, List } from 'lucide-react';
+import { locationApi, reviewApi, favoriteApi } from './services/api';
 import type { Location, Category, Review, ReviewCreateDTO, LocationCreateDTO } from './types';
 import { useTranslation } from './i18n/LanguageContext';
 import { ReviewList } from './components/ReviewList';
@@ -19,6 +19,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Hardcoded user ID for demonstration (MVP)
+const MOCK_USER_ID = 'u1';
+
 // Component to handle map view updates
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -32,6 +35,8 @@ function App() {
   const { language, setLanguage, t } = useTranslation();
   const [position, setPosition] = useState<[number, number]>([25.0330, 121.5654]); // Taipei
   const [locations, setLocations] = useState<Location[]>([]);
+  const [favorites, setFavorites] = useState<Location[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
   const [strollerOnly, setStrollerOnly] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +65,19 @@ function App() {
 
     fetchLocations();
   }, [position, selectedCategory, strollerOnly]);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const data = await favoriteApi.getFavorites(MOCK_USER_ID);
+        setFavorites(data);
+      } catch (error) {
+        console.error('Failed to fetch favorites:', error);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -115,6 +133,25 @@ function App() {
     }
   };
 
+  const toggleFavorite = async (e: React.MouseEvent, locationId: string) => {
+    e.stopPropagation();
+    const isFavorited = favorites.some(f => f.id === locationId);
+    try {
+      if (isFavorited) {
+        await favoriteApi.remove(MOCK_USER_ID, locationId);
+        setFavorites(favorites.filter(f => f.id !== locationId));
+      } else {
+        await favoriteApi.add(MOCK_USER_ID, locationId);
+        const location = locations.find(l => l.id === locationId) || await locationApi.getById(locationId);
+        if (location) {
+          setFavorites([...favorites, location]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
   const categories: { key: Category | undefined; icon: any; label: string }[] = [
     { key: undefined, icon: MapPin, label: t.common.all },
     { key: 'park', icon: Park, label: t.categories.park },
@@ -167,7 +204,15 @@ function App() {
             <div className="location-detail-overlay">
               <header className="detail-header">
                 <div>
-                  <h2>{selectedLocation.name[language]}</h2>
+                  <div className="detail-title-row">
+                    <h2>{selectedLocation.name[language]}</h2>
+                    <button 
+                      className={`favorite-button ${favorites.some(f => f.id === selectedLocation.id) ? 'active' : ''}`}
+                      onClick={(e) => toggleFavorite(e, selectedLocation.id)}
+                    >
+                      <Heart size={24} fill={favorites.some(f => f.id === selectedLocation.id) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
                   <p className="category-label">{t.categories[selectedLocation.category]}</p>
                 </div>
                 <button 
@@ -196,53 +241,90 @@ function App() {
             </div>
           ) : (
             <>
-              <div className="sidebar-tools">
+              <div className="sidebar-tabs">
                 <button 
-                  className={`tool-button ${strollerOnly ? 'active' : ''}`}
-                  onClick={() => setStrollerOnly(!strollerOnly)}
-                  title={t.common.filterStroller}
+                  className={`tab-button ${!showFavorites ? 'active' : ''}`}
+                  onClick={() => setShowFavorites(false)}
                 >
-                  <Filter size={18} />
-                  <span>{t.common.filterStroller}</span>
+                  <List size={18} />
+                  <span>{t.common.all}</span>
                 </button>
                 <button 
-                  className="tool-button primary"
-                  onClick={() => setShowAddLocation(true)}
-                  title={t.common.addLocation}
+                  className={`tab-button ${showFavorites ? 'active' : ''}`}
+                  onClick={() => setShowFavorites(true)}
                 >
-                  <Plus size={18} />
-                  <span>{t.common.addLocation}</span>
+                  <Heart size={18} />
+                  <span>{t.common.favorites}</span>
                 </button>
               </div>
-              <nav className="category-list">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.key || 'all'}
-                    className={`category-item ${selectedCategory === cat.key ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat.key)}
-                  >
-                    <cat.icon size={20} />
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-              </nav>
-              {loading && <div className="loading-overlay">{t.common.loading}</div>}
-              <div className="locations-list">
-                {locations.map((loc) => (
-                  <div 
-                    key={loc.id} 
-                    className="location-card"
-                    onClick={() => {
-                      setPosition([loc.coordinates.lat, loc.coordinates.lng]);
-                      setSelectedLocation(loc);
-                    }}
-                  >
-                    <h3>{loc.name[language]}</h3>
-                    <p className="category-label">{t.categories[loc.category]}</p>
-                    <p className="address-text">{loc.address[language]}</p>
-                    <div className="rating">⭐ {loc.averageRating}</div>
+
+              {!showFavorites ? (
+                <>
+                  <div className="sidebar-tools">
+                    <button 
+                      className={`tool-button ${strollerOnly ? 'active' : ''}`}
+                      onClick={() => setStrollerOnly(!strollerOnly)}
+                      title={t.common.filterStroller}
+                    >
+                      <Filter size={18} />
+                      <span>{t.common.filterStroller}</span>
+                    </button>
+                    <button 
+                      className="tool-button primary"
+                      onClick={() => setShowAddLocation(true)}
+                      title={t.common.addLocation}
+                    >
+                      <Plus size={18} />
+                      <span>{t.common.addLocation}</span>
+                    </button>
                   </div>
-                ))}
+                  <nav className="category-list">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.key || 'all'}
+                        className={`category-item ${selectedCategory === cat.key ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory(cat.key)}
+                      >
+                        <cat.icon size={20} />
+                        <span>{cat.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </>
+              ) : null}
+
+              {loading && <div className="loading-overlay">{t.common.loading}</div>}
+              
+              <div className="locations-list">
+                {(showFavorites ? favorites : locations).length === 0 ? (
+                  <div className="empty-state">
+                    <p>{showFavorites ? t.common.noFavorites : t.common.loading}</p>
+                  </div>
+                ) : (
+                  (showFavorites ? favorites : locations).map((loc) => (
+                    <div 
+                      key={loc.id} 
+                      className="location-card"
+                      onClick={() => {
+                        setPosition([loc.coordinates.lat, loc.coordinates.lng]);
+                        setSelectedLocation(loc);
+                      }}
+                    >
+                      <div className="card-header">
+                        <h3>{loc.name[language]}</h3>
+                        <button 
+                          className={`favorite-icon-button ${favorites.some(f => f.id === loc.id) ? 'active' : ''}`}
+                          onClick={(e) => toggleFavorite(e, loc.id)}
+                        >
+                          <Heart size={18} fill={favorites.some(f => f.id === loc.id) ? "currentColor" : "none"} />
+                        </button>
+                      </div>
+                      <p className="category-label">{t.categories[loc.category]}</p>
+                      <p className="address-text">{loc.address[language]}</p>
+                      <div className="rating">⭐ {loc.averageRating}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </>
           )}
