@@ -1,1 +1,0 @@
-{"version":3,"file":"locationController.d.ts","sourceRoot":"","sources":["locationController.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,OAAO,EAAE,KAAK,QAAQ,EAAE,MAAM,SAAS,CAAC;AAWtD,qBAAa,kBAAkB;WAChB,SAAS,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;WAarC,OAAO,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;CAajD"}
