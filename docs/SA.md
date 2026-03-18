@@ -23,9 +23,11 @@ graph TD
 ### 2.2 Backend (Node.js + Express)
 - **API Router:** Route requests to appropriate controllers.
 - **Location Controller:** Handle spatial queries (nearest locations), search, and CRUD for locations.
-- **Review Controller:** Manage user ratings and comments.
-- **Auth Controller:** (Future) Handle user sessions and permissions.
-- **Spatial Service:** Interface with PostGIS for radius-based queries.
+- `Review Controller`: Manage user ratings and comments.
+- `Auth Controller`: Handle user sessions, registrations, and permissions.
+- `Favorite Controller`: Manage user's saved locations.
+- `Spatial Service`: Interface with PostGIS for radius-based queries.
+
 
 ### 2.3 Database (PostgreSQL + PostGIS)
 - Store location data with GEOMETRY/GEOGRAPHY types for spatial indexing.

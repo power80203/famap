@@ -23,7 +23,24 @@
   - Post a review.
   - Body: `{ rating, comment, photos[] }`
 
-### 1.3 Static Data (i18n)
+### 1.3 Favorites API (Authenticated)
+- `GET /api/favorites`
+  - List user's favorite locations.
+- `POST /api/favorites`
+  - Add a location to favorites.
+  - Body: `{ location_id: UUID }`
+- `DELETE /api/favorites/:location_id`
+  - Remove a location from favorites.
+
+### 1.4 Auth API
+- `POST /api/auth/register`
+  - Register a new user.
+- `POST /api/auth/login`
+  - Login and receive a token.
+- `GET /api/auth/me` (Authenticated)
+  - Get current user profile.
+
+### 1.5 Static Data (i18n)
 - `GET /api/i18n?lang=...`
   - Fetch translation keys.
 
@@ -52,7 +69,24 @@
 | `type` | VARCHAR(50) | e.g., 'changing_table', 'high_chair', 'stroller_accessible' |
 | `count` | INT | Number of units (if applicable) |
 
-### 2.3 Table: `reviews`
+### 2.3 Table: `users`
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID (PK) | Unique identifier |
+| `email` | VARCHAR(255) | User email (unique) |
+| `password_hash` | TEXT | Hashed password |
+| `display_name` | TEXT | User display name |
+| `created_at` | TIMESTAMP | |
+
+### 2.4 Table: `favorites`
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID (PK) | Unique identifier |
+| `user_id` | UUID (FK) | Reference to `users` |
+| `location_id` | UUID (FK) | Reference to `locations` |
+| `created_at` | TIMESTAMP | |
+
+### 2.5 Table: `reviews`
 | Column | Type | Description |
 |---|---|---|
 | `id` | UUID (PK) | Unique identifier |
