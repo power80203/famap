@@ -11,6 +11,4 @@ I'll check the environment variables to see if `extensionPath` is defined.
 I'll read the `.gemini/ralph/state.json` file to understand the current loop state.
 I'll read the `.gemini_instructions.tmp` file to get the specific instructions for this loop.
 I'll list the files in the current directory to understand the existing project structure.
-I'll read the `docs/.dev_status.json` file to confirm the current develo
-
 ---

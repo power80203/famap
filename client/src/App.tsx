@@ -1,6 +1,11 @@
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { MapPin, Navigation, Globe, Trees as Park, Baby, Utensils, Hospital } from 'lucide-react';
+import { locationApi } from './services/api';
+import type { Location, Category } from './types';
+import { useTranslation } from './i18n/LanguageContext';
 
 // Fix for default marker icons in Leaflet with React
 // @ts-expect-error - Leaflet icon hack
@@ -11,22 +16,142 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Component to handle map view updates
+function MapUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
+
 function App() {
-  const position: [number, number] = [25.0330, 121.5654]; // Taipei
+  const { language, setLanguage, t } = useTranslation();
+  const [position, setPosition] = useState<[number, number]>([25.0330, 121.5654]); // Taipei
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      setLoading(true);
+      try {
+        const data = await locationApi.getNearby({
+          lat: position[0],
+          lng: position[1],
+          radius: 10000, // 10km for demo
+          category: selectedCategory,
+        });
+        setLocations(data);
+      } catch (error) {
+        console.error('Failed to fetch locations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, [position, selectedCategory]);
+
+  const handleFindMe = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setPosition([pos.coords.latitude, pos.coords.longitude]);
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          alert('Could not get your location. Defaulting to Taipei.');
+        }
+      );
+    }
+  };
+
+  const categories: { key: Category | undefined; icon: any; label: string }[] = [
+    { key: undefined, icon: MapPin, label: t.common.all },
+    { key: 'park', icon: Park, label: t.categories.park },
+    { key: 'nursing_room', icon: Baby, label: t.categories.nursing_room },
+    { key: 'restaurant', icon: Utensils, label: t.categories.restaurant },
+    { key: 'medical', icon: Hospital, label: t.categories.medical },
+  ];
 
   return (
-    <div className="map-container">
-      <MapContainer center={position} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={position}>
-          <Popup>
-            FamMap: Welcome to Taipei!
-          </Popup>
-        </Marker>
-      </MapContainer>
+    <div className="app-layout">
+      <header className="app-header">
+        <div className="logo-section">
+          <h1>FamMap</h1>
+        </div>
+        <div className="header-actions">
+          <button onClick={handleFindMe} className="icon-button" title={t.common.findMe}>
+            <Navigation size={20} />
+          </button>
+          <button 
+            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')} 
+            className="icon-button"
+            title="Switch Language"
+          >
+            <Globe size={20} />
+            <span className="lang-text">{language === 'zh' ? 'EN' : '中'}</span>
+          </button>
+        </div>
+      </header>
+
+      <div className="main-content">
+        <aside className="sidebar">
+          <nav className="category-list">
+            {categories.map((cat) => (
+              <button
+                key={cat.key || 'all'}
+                className={`category-item ${selectedCategory === cat.key ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat.key)}
+              >
+                <cat.icon size={20} />
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </nav>
+          {loading && <div className="loading-overlay">{t.common.loading}</div>}
+          <div className="locations-list">
+            {locations.map((loc) => (
+              <div 
+                key={loc.id} 
+                className="location-card"
+                onClick={() => setPosition([loc.coordinates.lat, loc.coordinates.lng])}
+              >
+                <h3>{loc.name[language]}</h3>
+                <p className="category-label">{t.categories[loc.category]}</p>
+                <p className="address-text">{loc.address[language]}</p>
+                <div className="rating">⭐ {loc.averageRating}</div>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <main className="map-view">
+          <MapContainer center={position} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapUpdater center={position} />
+            {locations.map((loc) => (
+              <Marker key={loc.id} position={[loc.coordinates.lat, loc.coordinates.lng]}>
+                <Popup>
+                  <div className="popup-content">
+                    <strong>{loc.name[language]}</strong>
+                    <p>{loc.description[language]}</p>
+                    <div className="facility-chips">
+                      {loc.facilities.map(f => (
+                        <span key={f} className="chip">{t.facilities[f as keyof typeof t.facilities] || f}</span>
+                      ))}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </main>
+      </div>
     </div>
   );
 }
