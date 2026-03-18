@@ -1,0 +1,8 @@
+{
+  "deployed_at": "2026-03-18T21:04:30.000Z",
+  "method": "tsx / vite-preview",
+  "ports": [3003, 3004],
+  "urls": ["http://localhost:3003", "http://localhost:3004"],
+  "pid_or_container": "Server PID: 2776955, Client PID: 2776944",
+  "status": "running"
+}
